@@ -37,15 +37,38 @@ struct florestaDeArvores
 
 typedef struct florestaDeArvores Floresta;
 
-// Tree * CriaNo(int frequencia, int simbolo){
-//     Tree * novaCaixa;
-//     novaCaixa = (Tree *)malloc(sizeof(Tree));
-//     novaCaixa -> dir = NULL;
-//     novaCaixa -> esq = NULL;
-//     novaCaixa -> frequencia = frequencia;
-//     novaCaixa -> simbolo = simbolo;
-//     return novaCaixa;
-// }
+struct pilha
+{
+    Tree *T;
+    struct pilha *prox;
+};
+
+typedef struct pilha Pilha;
+
+void init(Pilha **P)
+{
+    *P = NULL;
+}
+
+void push(Pilha **P, Tree *elem)
+{
+    Pilha *novaCaixa, *aux;
+    novaCaixa->T = elem;
+    novaCaixa->prox = *P;
+    *P = novaCaixa;
+}
+
+void pop(Pilha **P, Tree **elem)
+{
+    Pilha *aux;
+    *elem = (*P)->T;
+    *P = (*P)->prox;
+}
+
+char isEmpty(Pilha *P)
+{
+    return P == NULL;
+}
 
 Lista *criaCaixa(int simbolo, char palavra[])
 {
@@ -82,10 +105,6 @@ void inserePalavra(char palavra[], Lista **L)
         }
     }
 }
-
-// void insereOrdenado(Lista * * L){
-//     if(*L == NULL)
-// }
 
 Floresta *CriaFloresta(int frequencia, int simbolo)
 {
@@ -146,5 +165,47 @@ Tree *CriaArvore(Lista *L)
             tr = novoGalho;
         }
         return tr->arbusto;
+    }
+}
+
+char Folha(Tree *T)
+{
+    return T->dir == NULL && T->esq == NULL;
+}
+
+void colocaCodigoNaLista(int simbolo, Lista *lista, char codigoAtual[])
+{
+    Lista *aux;
+    aux = lista;
+    while (aux != NULL && aux->D.simbolo != simbolo)
+    {
+        aux = aux->prox;
+    }
+
+    if (aux != NULL)
+    {
+        aux->D.codigo = atoi(codigoAtual);
+    }
+}
+
+void criaCodigos(Tree *T, char codigoAtual[], int index, Lista **lista)
+{
+
+    if (T != NULL)
+    {
+
+        if (Folha(T))
+        {
+            codigoAtual[index] = '\0';
+            colocaCodigoNaLista(T->simbolo, *lista, codigoAtual);
+        }
+        else
+        {
+            codigoAtual[index] = '0';
+            criaCodigos(T->esq, codigoAtual, index + 1, &(*lista));
+
+            codigoAtual[index] = '1';
+            criaCodigos(T->dir, codigoAtual, index + 1, &(*lista));
+        }
     }
 }
