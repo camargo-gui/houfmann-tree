@@ -142,12 +142,12 @@ void InsereNaFloresta(int frequencia, int simbolo, Floresta **flr)
     }
 }
 
-
 Tree *CriaArvore(Lista *L)
 {
     if (L != NULL)
     {
         Floresta *tr, *prElemento, *segElemento;
+        tr = NULL;
         Lista *aux;
         aux = L;
         while (aux != NULL)
@@ -165,12 +165,15 @@ Tree *CriaArvore(Lista *L)
             novoGalho->arbusto->dir = segElemento->arbusto;
             novoGalho->prox = segElemento->prox;
             tr = novoGalho;
+            prElemento = tr;
+            segElemento = tr->prox;
         }
         return tr->arbusto;
     }
-    else {
-        Floresta * tr = NULL;
-        return tr -> arbusto;
+    else
+    {
+        Floresta *tr = NULL;
+        return tr->arbusto;
     }
 }
 
@@ -262,10 +265,15 @@ void lerArquivo()
                 limparString(string);
             }
         }
-        Tree * arvore;
+        Tree *arvore;
         arvore = NULL;
         arvore = CriaArvore(L);
-        imprimeArvore(arvore,0);
+        imprimeArvore(arvore, 0);
         fclose(arquivo);
     }
+}
+
+int main()
+{
+    lerArquivo();
 }
