@@ -50,20 +50,20 @@ void init(Pilha **P)
     *P = NULL;
 }
 
-void push(Pilha **P, Tree *elem)
-{
-    Pilha *novaCaixa, *aux;
-    novaCaixa->T = elem;
-    novaCaixa->prox = *P;
-    *P = novaCaixa;
-}
+// void push(Pilha **P, Tree *elem)
+// {
+//     Pilha *novaCaixa, *aux;
+//     novaCaixa->T = elem;
+//     novaCaixa->prox = *P;
+//     *P = novaCaixa;
+// }
 
-void pop(Pilha **P, Tree **elem)
-{
-    Pilha *aux;
-    *elem = (*P)->T;
-    *P = (*P)->prox;
-}
+// void pop(Pilha **P, Tree **elem)
+// {
+//     Pilha *aux;
+//     *elem = (*P)->T;
+//     *P = (*P)->prox;
+// }
 
 char isEmpty(Pilha *P)
 {
@@ -119,25 +119,29 @@ Floresta *CriaFloresta(int frequencia, int simbolo)
 
 void InsereNaFloresta(int frequencia, int simbolo, Floresta **flr)
 {
-    if (*flr == NULL)
+    if (*flr == NULL || (*flr)->arbusto->frequencia >= frequencia)
     {
-        *flr = CriaFloresta(frequencia, simbolo);
+        Floresta *novaFloresta = CriaFloresta(frequencia, simbolo);
+        novaFloresta->prox = *flr;
+        *flr = novaFloresta;
     }
     else
     {
-        Floresta *aux, *ant;
-        aux = *flr;
+        Floresta *aux = *flr;
+        Floresta *ant = NULL;
+
         while (aux != NULL && aux->arbusto->frequencia < frequencia)
         {
             ant = aux;
             aux = aux->prox;
         }
-        Floresta *novaFloresta;
-        novaFloresta = CriaFloresta(frequencia, simbolo);
-        novaFloresta = ant->prox;
+
+        Floresta *novaFloresta = CriaFloresta(frequencia, simbolo);
+        novaFloresta->prox = ant->prox;
         ant->prox = novaFloresta;
     }
 }
+
 
 Tree *CriaArvore(Lista *L)
 {
@@ -163,6 +167,10 @@ Tree *CriaArvore(Lista *L)
             tr = novoGalho;
         }
         return tr->arbusto;
+    }
+    else {
+        Floresta * tr = NULL;
+        return tr -> arbusto;
     }
 }
 
@@ -213,6 +221,20 @@ void limparString(char *str)
     str[0] = '\0';
 }
 
+void imprimeArvore(Tree *raiz, int nivel)
+{
+    if (raiz != NULL)
+    {
+        imprimeArvore(raiz->dir, nivel + 1);
+
+        for (int i = 0; i < nivel; i++)
+            printf("   ");
+
+        printf("(%d,%d)\n", raiz->frequencia, raiz->simbolo);
+
+        imprimeArvore(raiz->esq, nivel + 1);
+    }
+}
 void lerArquivo()
 {
     FILE *arquivo = fopen("texto.txt", "r");
@@ -240,5 +262,10 @@ void lerArquivo()
                 limparString(string);
             }
         }
+        Tree * arvore;
+        arvore = NULL;
+        arvore = CriaArvore(L);
+        imprimeArvore(arvore,0);
+        fclose(arquivo);
     }
 }
