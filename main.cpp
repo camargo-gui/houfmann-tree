@@ -109,6 +109,8 @@ void inserePalavra(char palavra[], Lista **L)
 Floresta *CriaFloresta(int frequencia, int simbolo)
 {
     Floresta *novaCaixa;
+    novaCaixa = (Floresta *)malloc(sizeof(Floresta));
+    novaCaixa->arbusto = (Tree *)malloc(sizeof(Tree));
     novaCaixa->arbusto->simbolo = simbolo;
     novaCaixa->arbusto->frequencia = frequencia;
     novaCaixa->prox = NULL;
@@ -139,11 +141,7 @@ void InsereNaFloresta(int frequencia, int simbolo, Floresta **flr)
 
 Tree *CriaArvore(Lista *L)
 {
-    if (L == NULL)
-    {
-        return;
-    }
-    else
+    if (L != NULL)
     {
         Floresta *tr, *prElemento, *segElemento;
         Lista *aux;
@@ -206,6 +204,41 @@ void criaCodigos(Tree *T, char codigoAtual[], int index, Lista **lista)
 
             codigoAtual[index] = '1';
             criaCodigos(T->dir, codigoAtual, index + 1, &(*lista));
+        }
+    }
+}
+
+void limparString(char *str)
+{
+    str[0] = '\0';
+}
+
+void lerArquivo()
+{
+    FILE *arquivo = fopen("texto.txt", "r");
+    char caractere[2];
+    char string[50];
+    Lista *L;
+    L = NULL;
+    string[0] = '\0';
+
+    if (arquivo != NULL)
+    {
+        while ((caractere[0] = fgetc(arquivo)) != EOF)
+        {
+            caractere[1] = '\0';
+            if (caractere[0] != ' ' && caractere[0] != ',' && caractere[0] != '.')
+            {
+                strcat(string, caractere);
+            }
+            if (caractere[0] == ' ')
+            {
+                inserePalavra(string, &L);
+                string[0] = ' ';
+                string[1] = '\0';
+                inserePalavra(string, &L);
+                limparString(string);
+            }
         }
     }
 }
