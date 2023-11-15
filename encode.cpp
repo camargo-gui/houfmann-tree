@@ -1,74 +1,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-
-struct dados
-{
-    char palavra[30];
-    int frequencia;
-    char codigo[30];
-    int simbolo;
-};
-
-typedef struct dados Dados;
-
-struct lista
-{
-    Dados D;
-    struct lista *prox;
-};
-
-typedef struct lista Lista;
-
-struct tree
-{
-    int frequencia;
-    int simbolo;
-    struct tree *dir, *esq;
-};
-
-typedef struct tree Tree;
-
-struct florestaDeArvores
-{
-    Tree *arbusto;
-    struct florestaDeArvores *prox;
-};
-
-typedef struct florestaDeArvores Floresta;
-
-struct pilha
-{
-    Tree *T;
-    struct pilha *prox;
-};
-
-typedef struct pilha Pilha;
-
-void init(Pilha **P)
-{
-    *P = NULL;
-}
-
-// void push(Pilha **P, Tree *elem)
-// {
-//     Pilha *novaCaixa, *aux;
-//     novaCaixa->T = elem;
-//     novaCaixa->prox = *P;
-//     *P = novaCaixa;
-// }
-
-// void pop(Pilha **P, Tree **elem)
-// {
-//     Pilha *aux;
-//     *elem = (*P)->T;
-//     *P = (*P)->prox;
-// }
-
-char isEmpty(Pilha *P)
-{
-    return P == NULL;
-}
+#include "TAD.h"
 
 Lista *criaCaixa(int simbolo, char palavra[])
 {
@@ -104,82 +37,6 @@ void inserePalavra(char palavra[], Lista **L)
             ant->prox = criaCaixa(ant->D.simbolo + 1, palavra);
         }
     }
-}
-
-Floresta *CriaFloresta(int frequencia, int simbolo)
-{
-    Floresta *novaCaixa;
-    novaCaixa = (Floresta *)malloc(sizeof(Floresta));
-    novaCaixa->arbusto = (Tree *)malloc(sizeof(Tree));
-    novaCaixa->arbusto->simbolo = simbolo;
-    novaCaixa->arbusto->frequencia = frequencia;
-    novaCaixa->prox = NULL;
-    return novaCaixa;
-}
-
-void InsereNaFloresta(int frequencia, int simbolo, Floresta **flr)
-{
-    if (*flr == NULL || (*flr)->arbusto->frequencia >= frequencia)
-    {
-        Floresta *novaFloresta = CriaFloresta(frequencia, simbolo);
-        novaFloresta->prox = *flr;
-        *flr = novaFloresta;
-    }
-    else
-    {
-        Floresta *aux = *flr;
-        Floresta *ant = NULL;
-
-        while (aux != NULL && aux->arbusto->frequencia < frequencia)
-        {
-            ant = aux;
-            aux = aux->prox;
-        }
-
-        Floresta *novaFloresta = CriaFloresta(frequencia, simbolo);
-        novaFloresta->prox = ant->prox;
-        ant->prox = novaFloresta;
-    }
-}
-
-Tree *CriaArvore(Lista *L)
-{
-    if (L != NULL)
-    {
-        Floresta *tr, *prElemento, *segElemento;
-        tr = NULL;
-        Lista *aux;
-        aux = L;
-        while (aux != NULL)
-        {
-            InsereNaFloresta(aux->D.frequencia, aux->D.simbolo, &tr);
-            aux = aux->prox;
-        }
-        prElemento = tr;
-        segElemento = tr->prox;
-        while (segElemento != NULL)
-        {
-            Floresta *novoGalho;
-            novoGalho = CriaFloresta(prElemento->arbusto->frequencia + segElemento->arbusto->frequencia, 0);
-            novoGalho->arbusto->esq = prElemento->arbusto;
-            novoGalho->arbusto->dir = segElemento->arbusto;
-            novoGalho->prox = segElemento->prox;
-            tr = novoGalho;
-            prElemento = tr;
-            segElemento = tr->prox;
-        }
-        return tr->arbusto;
-    }
-    else
-    {
-        Floresta *tr = NULL;
-        return tr->arbusto;
-    }
-}
-
-char Folha(Tree *T)
-{
-    return T->dir == NULL && T->esq == NULL;
 }
 
 void colocaCodigoNaLista(int simbolo, Lista *lista, char codigoAtual[])
@@ -224,29 +81,7 @@ void limparString(char *str)
     str[0] = '\0';
 }
 
-void imprimeArvore(Tree *raiz, int nivel)
-{
-    if (raiz != NULL)
-    {
-        imprimeArvore(raiz->dir, nivel + 1);
-        if (Folha(raiz))
-        {
-            printf("(%d,%d)\n", raiz->frequencia, raiz->simbolo);
-        }
-        imprimeArvore(raiz->esq, nivel + 1);
-    }
-}
-
-void imprimeLista(Lista *L)
-{
-    while (L != NULL)
-    {
-        printf("%s %d %s\n", L->D.palavra, L->D.frequencia, L->D.codigo);
-        L = L->prox;
-    }
-}
-
-void salvarListaBinario(Lista *L, char nomeArq[])
+void salvarListaBinario(Lista *L, char *nomeArq)
 {
     FILE *arquivo = fopen(nomeArq, "wb");
 
@@ -281,6 +116,18 @@ void procuraCodigo(Lista *L, char palavra[], char codigo[])
     }
 }
 
+void inserePalavraNoArquivo(Lista *L, char string[], char codigo[], FILE *novoArquivo)
+{
+    procuraCodigo(L, string, codigo);
+    fprintf(novoArquivo, "%s", codigo);
+    string[0] = ' ';
+    string[1] = '\0';
+    procuraCodigo(L, string, codigo);
+    fprintf(novoArquivo, "%s", codigo);
+    limparString(string);
+    limparString(codigo);
+}
+
 void salvarCodigoCompactado(Lista *L, FILE *ptr)
 {
 
@@ -295,23 +142,69 @@ void salvarCodigoCompactado(Lista *L, FILE *ptr)
 
     if (ptr != NULL)
     {
+        caractere[0] = fgetc(ptr);
         while (!feof(ptr))
         {
-            caractere[0] = fgetc(ptr);
-            if (caractere[0] != ' ' && caractere[0] != ',' && caractere[0] != '.')
+            if (caractere[0] != ' ')
             {
                 strcat(string, caractere);
             }
             if (caractere[0] == ' ')
             {
-                procuraCodigo(L, string, codigo);
-                fprintf(novoArquivo, "%s", codigo);
-                string[0] = ' ';
-                string[1] = '\0';
-                procuraCodigo(L, string, codigo);
-                fprintf(novoArquivo, "%s", codigo);
-                limparString(string);
-                limparString(codigo);
+                inserePalavraNoArquivo(L, string, codigo, novoArquivo);
+            }
+            caractere[0] = fgetc(ptr);
+            while (caractere[0] == ',' || caractere[0] == '.')
+            {
+                caractere[0] = fgetc(ptr);
+            }
+            if (feof(ptr))
+            {
+                inserePalavraNoArquivo(L, string, codigo, novoArquivo);
+            }
+        }
+    }
+}
+
+void inserePalavraNaLista(Lista **L, char string[])
+{
+    inserePalavra(string, &(*L));
+    string[0] = ' ';
+    string[1] = '\0';
+    inserePalavra(string, &(*L));
+    limparString(string);
+}
+
+void arquivoParaLista(FILE *arquivo, Lista **L)
+{
+
+    char caractere[2];
+    char string[50];
+
+    string[0] = '\0';
+    caractere[1] = '\0';
+
+    if (arquivo != NULL)
+    {
+        while (!feof(arquivo))
+        {
+
+            if (caractere[0] != ' ')
+            {
+                strcat(string, caractere);
+            }
+            if (caractere[0] == ' ')
+            {
+                inserePalavraNaLista(&(*L), string);
+            }
+            caractere[0] = fgetc(arquivo);
+            while (caractere[0] == ',' || caractere[0] == '.')
+            {
+                caractere[0] = fgetc(arquivo);
+            }
+            if (feof(arquivo))
+            {
+                inserePalavraNaLista(&(*L), string);
             }
         }
     }
@@ -320,42 +213,21 @@ void salvarCodigoCompactado(Lista *L, FILE *ptr)
 void lerArquivo()
 {
     FILE *arquivo = fopen("texto.txt", "r");
-    char caractere[2];
-    char string[50];
+
     Lista *L;
     L = NULL;
-    string[0] = '\0';
 
-    if (arquivo != NULL)
-    {
-        while ((caractere[0] = fgetc(arquivo)) != EOF)
-        {
-            caractere[1] = '\0';
-            if (caractere[0] != ' ' && caractere[0] != ',' && caractere[0] != '.')
-            {
-                strcat(string, caractere);
-            }
-            if (caractere[0] == ' ')
-            {
-                inserePalavra(string, &L);
-                string[0] = ' ';
-                string[1] = '\0';
-                inserePalavra(string, &L);
-                limparString(string);
-            }
-        }
-        Tree *arvore;
-        arvore = NULL;
-        arvore = CriaArvore(L);
-        // imprimeArvore(arvore, 0);
-        char codigos[30];
-        strcpy(codigos, "0");
-        criaCodigos(arvore, codigos, 0, &L);
-        imprimeLista(L);
-        salvarListaBinario(L, "binario.dat");
-        salvarCodigoCompactado(L,arquivo);
-        fclose(arquivo);
-    }
+    arquivoParaLista(arquivo, &L);
+
+    Tree *arvore;
+    arvore = NULL;
+    arvore = CriaArvore(L);
+    char codigos[30];
+    strcpy(codigos, "0");
+    criaCodigos(arvore, codigos, 0, &L);
+    salvarListaBinario(L, "binario.dat");
+    salvarCodigoCompactado(L, arquivo);
+    fclose(arquivo);
 }
 
 int main()
