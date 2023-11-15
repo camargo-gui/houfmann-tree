@@ -6,7 +6,7 @@ struct dados
 {
     char palavra[30];
     int frequencia;
-    int codigo;
+    char codigo[30];
     int simbolo;
 };
 
@@ -74,7 +74,7 @@ Lista *criaCaixa(int simbolo, char palavra[])
 {
     Lista *novaCaixa;
     novaCaixa = (Lista *)malloc(sizeof(Lista));
-    novaCaixa->D.codigo = 0;
+    strcpy(novaCaixa->D.codigo, "0");
     novaCaixa->D.frequencia = 1;
     novaCaixa->D.simbolo = simbolo;
     strcpy(novaCaixa->D.palavra, palavra);
@@ -193,7 +193,7 @@ void colocaCodigoNaLista(int simbolo, Lista *lista, char codigoAtual[])
 
     if (aux != NULL)
     {
-        aux->D.codigo = atoi(codigoAtual);
+        strcpy(aux->D.codigo, codigoAtual);
     }
 }
 
@@ -229,15 +229,94 @@ void imprimeArvore(Tree *raiz, int nivel)
     if (raiz != NULL)
     {
         imprimeArvore(raiz->dir, nivel + 1);
-
-        for (int i = 0; i < nivel; i++)
-            printf("   ");
-
-        printf("(%d,%d)\n", raiz->frequencia, raiz->simbolo);
-
+        if (Folha(raiz))
+        {
+            printf("(%d,%d)\n", raiz->frequencia, raiz->simbolo);
+        }
         imprimeArvore(raiz->esq, nivel + 1);
     }
 }
+
+void imprimeLista(Lista *L)
+{
+    while (L != NULL)
+    {
+        printf("%s %d %s\n", L->D.palavra, L->D.frequencia, L->D.codigo);
+        L = L->prox;
+    }
+}
+
+void salvarListaBinario(Lista *L, char nomeArq[])
+{
+    FILE *arquivo = fopen(nomeArq, "wb");
+
+    if (arquivo != NULL)
+    {
+
+        Lista *aux = L;
+
+        while (aux != NULL)
+        {
+            fwrite(&(aux->D), sizeof(Dados), 1, arquivo);
+            aux = aux->prox;
+        }
+    }
+
+    fclose(arquivo);
+}
+
+void procuraCodigo(Lista *L, char palavra[], char codigo[])
+{
+    while (L != NULL && strcmp(L->D.palavra, palavra) != 0)
+    {
+        L = L->prox;
+    }
+    if (L != NULL)
+    {
+        strcpy(codigo, L->D.codigo);
+    }
+    else
+    {
+        codigo[0] = '\0';
+    }
+}
+
+void salvarCodigoCompactado(Lista *L, FILE *ptr)
+{
+
+    char caractere[2];
+    char string[50];
+    char codigo[30];
+    caractere[1] = '\0';
+
+    FILE *novoArquivo = fopen("textoCodificado.txt", "w");
+
+    fseek(ptr, 0, SEEK_SET);
+
+    if (ptr != NULL)
+    {
+        while (!feof(ptr))
+        {
+            caractere[0] = fgetc(ptr);
+            if (caractere[0] != ' ' && caractere[0] != ',' && caractere[0] != '.')
+            {
+                strcat(string, caractere);
+            }
+            if (caractere[0] == ' ')
+            {
+                procuraCodigo(L, string, codigo);
+                fprintf(novoArquivo, "%s", codigo);
+                string[0] = ' ';
+                string[1] = '\0';
+                procuraCodigo(L, string, codigo);
+                fprintf(novoArquivo, "%s", codigo);
+                limparString(string);
+                limparString(codigo);
+            }
+        }
+    }
+}
+
 void lerArquivo()
 {
     FILE *arquivo = fopen("texto.txt", "r");
@@ -268,7 +347,12 @@ void lerArquivo()
         Tree *arvore;
         arvore = NULL;
         arvore = CriaArvore(L);
-        imprimeArvore(arvore, 0);
+        // imprimeArvore(arvore, 0);
+        char codigos[30];
+        strcpy(codigos, "0");
+        criaCodigos(arvore, codigos, 0, &L);
+        imprimeLista(L);
+        salvarCodigoCompactado(L,arquivo);
         fclose(arquivo);
     }
 }
