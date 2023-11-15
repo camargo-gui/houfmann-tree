@@ -352,6 +352,7 @@ void lerArquivo()
         strcpy(codigos, "0");
         criaCodigos(arvore, codigos, 0, &L);
         imprimeLista(L);
+        salvarListaBinario(L, "binario.dat");
         salvarCodigoCompactado(L,arquivo);
         fclose(arquivo);
     }
