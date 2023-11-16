@@ -95,8 +95,28 @@ Tree *CriaArvore(Lista *L)
             novoGalho = CriaFloresta(prElemento->arbusto->frequencia + segElemento->arbusto->frequencia, 0);
             novoGalho->arbusto->esq = prElemento->arbusto;
             novoGalho->arbusto->dir = segElemento->arbusto;
-            novoGalho->prox = segElemento->prox;
-            tr = novoGalho;
+            tr = segElemento->prox;
+            if (tr == NULL || novoGalho->arbusto->frequencia <= tr->arbusto->frequencia)
+            {
+                novoGalho->prox = tr;
+                tr = novoGalho;
+            }
+            else
+            {
+                Floresta *aux = tr;
+                Floresta *ant = NULL;
+
+                while (aux != NULL && aux->arbusto->frequencia < novoGalho->arbusto->frequencia)
+                {
+                    ant = aux;
+                    aux = aux->prox;
+                }
+                if (ant != NULL)
+                {
+                    novoGalho->prox = ant->prox;
+                    ant->prox = novoGalho;
+                }
+            }
             prElemento = tr;
             segElemento = tr->prox;
         }
