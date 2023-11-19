@@ -3,7 +3,98 @@
 #include <stdlib.h>
 #include "TAD.h"
 
-Lista *criaCaixa(int simbolo, char palavra[])
+Floresta *CriaFloresta(int frequencia, int simbolo)
+{
+    Floresta *novaCaixa;
+    novaCaixa = (Floresta *)malloc(sizeof(Floresta));
+    novaCaixa->arbusto = (Tree *)malloc(sizeof(Tree));
+    novaCaixa->arbusto->simbolo = simbolo;
+    novaCaixa->arbusto->frequencia = frequencia;
+    novaCaixa->prox = NULL;
+    return novaCaixa;
+}
+
+void InsereNaFloresta(int frequencia, int simbolo, Floresta **flr)
+{
+    if (*flr == NULL || (*flr)->arbusto->frequencia >= frequencia)
+    {
+        Floresta *novaFloresta = CriaFloresta(frequencia, simbolo);
+        novaFloresta->prox = *flr;
+        *flr = novaFloresta;
+    }
+    else
+    {
+        Floresta *aux = *flr;
+        Floresta *ant = NULL;
+
+        while (aux != NULL && aux->arbusto->frequencia <= frequencia)
+        {
+            ant = aux;
+            aux = aux->prox;
+        }
+
+        Floresta *novaFloresta = CriaFloresta(frequencia, simbolo);
+        novaFloresta->prox = ant->prox;
+        ant->prox = novaFloresta;
+    }
+}
+
+Tree *CriaArvore(Lista *L)
+{
+    if (L != NULL)
+    {
+        Floresta *tr, *prElemento, *segElemento;
+        tr = NULL;
+        Lista *aux;
+        aux = L;
+        while (aux != NULL)
+        {
+            InsereNaFloresta(aux->D.frequencia, aux->D.simbolo, &tr);
+            aux = aux->prox;
+        }
+        prElemento = tr;
+        segElemento = tr->prox;
+        while (segElemento != NULL)
+        {
+            Floresta *novoGalho;
+            novoGalho = CriaFloresta(prElemento->arbusto->frequencia + segElemento->arbusto->frequencia, 0);
+            novoGalho->arbusto->esq = prElemento->arbusto;
+            novoGalho->arbusto->dir = segElemento->arbusto;
+            tr = segElemento->prox;
+            if (tr == NULL || novoGalho->arbusto->frequencia <= tr->arbusto->frequencia)
+            {
+                novoGalho->prox = tr;
+                tr = novoGalho;
+            }
+            else
+            {
+                Floresta *aux = tr;
+                Floresta *ant = NULL;
+
+                while (aux != NULL && aux->arbusto->frequencia < novoGalho->arbusto->frequencia)
+                {
+                    ant = aux;
+                    aux = aux->prox;
+                }
+                if (ant != NULL)
+                {
+                    novoGalho->prox = ant->prox;
+                    ant->prox = novoGalho;
+                }
+            }
+            prElemento = tr;
+            segElemento = tr->prox;
+        }
+        return tr->arbusto;
+    }
+    else
+    {
+        Floresta *tr = NULL;
+        return tr->arbusto;
+    }
+}
+
+Lista *criaCaixa(int simbolo, char palavra[]) 
 {
     Lista *novaCaixa;
     novaCaixa = (Lista *)malloc(sizeof(Lista));
@@ -13,7 +104,7 @@ Lista *criaCaixa(int simbolo, char palavra[])
     strcpy(novaCaixa->D.palavra, palavra);
     return novaCaixa;
 }
-void inserePalavra(char palavra[], Lista **L)
+void inserePalavra(char palavra[], Lista **L) // Insere a palavra na lista encadeada
 {
     Lista *ant, *aux;
     aux = *L;
@@ -39,7 +130,7 @@ void inserePalavra(char palavra[], Lista **L)
     }
 }
 
-void colocaCodigoNaLista(int simbolo, Lista *lista, char codigoAtual[])
+void colocaCodigoNaLista(int simbolo, Lista *lista, char codigoAtual[]) // Coloca o código na lista encadeada
 {
     Lista *aux;
     aux = lista;
@@ -54,7 +145,7 @@ void colocaCodigoNaLista(int simbolo, Lista *lista, char codigoAtual[])
     }
 }
 
-void criaCodigos(Tree *T, char codigoAtual[], int index, Lista **lista)
+void criaCodigos(Tree *T, char codigoAtual[], int index, Lista **lista) // Cria os códigos da árvore
 {
 
     if (T != NULL)
@@ -212,7 +303,8 @@ void arquivoParaLista(FILE *arquivo, Lista **L)
 
 void lerArquivo()
 {
-    FILE *arquivo = fopen("texto.txt", "r");
+    FILE *arquivo = fopen("texto1.txt", "r");
+    FILE *arquivo2 = fopen("texto2.txt", "r");
 
     Lista *L;
     L = NULL;
@@ -226,11 +318,12 @@ void lerArquivo()
     strcpy(codigos, "0");
     criaCodigos(arvore, codigos, 0, &L);
     salvarListaBinario(L, "binario.dat");
-    salvarCodigoCompactado(L, arquivo);
+    salvarCodigoCompactado(L, arquivo2);
     fclose(arquivo);
 }
 
 int main()
 {
     lerArquivo();
+    printf("Arquivo codificado com sucesso!\n");
 }
