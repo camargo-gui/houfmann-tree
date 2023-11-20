@@ -10,6 +10,8 @@ Floresta *CriaFloresta(int frequencia, int simbolo)
     novaCaixa->arbusto = (Tree *)malloc(sizeof(Tree));
     novaCaixa->arbusto->simbolo = simbolo;
     novaCaixa->arbusto->frequencia = frequencia;
+    novaCaixa->arbusto->dir = NULL;
+    novaCaixa->arbusto->esq = NULL;
     novaCaixa->prox = NULL;
     return novaCaixa;
 }
@@ -41,11 +43,10 @@ void InsereNaFloresta(int frequencia, int simbolo, Floresta **flr)
 
 Tree *CriaArvore(Lista *L)
 {
+	Floresta *tr = NULL, *prElemento, *segElemento;
+	Lista *aux;
     if (L != NULL)
     {
-        Floresta *tr, *prElemento, *segElemento;
-        tr = NULL;
-        Lista *aux;
         aux = L;
         while (aux != NULL)
         {
@@ -101,6 +102,7 @@ Lista *criaCaixa(int simbolo, char palavra[])
     strcpy(novaCaixa->D.codigo, "0");
     novaCaixa->D.frequencia = 1;
     novaCaixa->D.simbolo = simbolo;
+    novaCaixa->prox = NULL;
     strcpy(novaCaixa->D.palavra, palavra);
     return novaCaixa;
 }
@@ -151,7 +153,7 @@ void criaCodigos(Tree *T, char codigoAtual[], int index, Lista **lista) // Cria 
     if (T != NULL)
     {
 
-        if (Folha(T))
+        if (T -> dir == NULL && T -> esq == NULL)
         {
             codigoAtual[index] = '\0';
             colocaCodigoNaLista(T->simbolo, *lista, codigoAtual);
